@@ -1,0 +1,90 @@
+
+export const tableTitle = ["Pair", "Price", "24h Change", "24h Volume(coin)", "24h Volume USD"]
+export const cryptoIconList = [
+    [
+        "btc",
+        "dollar",
+    ],
+    [
+        "eth",
+        "usdt",
+    ],
+    [
+        "btc",
+        "dollar",
+    ],
+    [
+        "usdc",
+        "usdt",
+    ],
+    [
+        "eth",
+        "usdt",
+    ],
+    [
+        "sol",
+        "dollar",
+    ],
+    [
+        "eth",
+        "btc"
+    ],
+    [
+        "matic",
+        "dollar"
+    ],
+]
+export const fakeCoinList = [
+    [
+        "BTC/USDC",
+        50000.14214,
+        1.412213,
+        1000.632423,
+        50000.14214,
+    ],
+    [
+        "ETH/USDC",
+        3000.4214213213,
+        0.4213213,
+        1000.632423,
+        50000.14214,
+    ],
+    [
+        "BTC/USDT",
+        50001.412421,
+        1.14321321,
+        1000.632423,
+        50000.14214,
+    ],
+    [
+        "ETH/USDT",
+        3001.4214213,
+        0.43434,
+        1000.632423,
+        50000.14214,
+    ],
+    [
+        "SOL/USDC",
+        203.1242124,
+        -2.43444,
+        1000.632423,
+        50000.14214,
+    ],
+    [
+        "ETH/BTC",
+        203.1242124,
+        -2.43444,
+        1000.632423,
+        50000.14214,
+    ],
+    [
+        "MATIC/USDC",
+        203.1242124,
+        -2.43444,
+        1000.632423,
+        50000.14214,
+    ],
+]
+
+export const cryptoPairs = ["BTC/USDC", "ETH/USDC", "BTC/USDT", "USDC/USDT", "ETH/USDT", "SOL/USDC", "ETH/BTC", "MATIC/USDC"]
+export const cryptoKeys = ["btcusdc", "ethusdc", "btcusdt", "usdcusdt", "ethusdt", "solusdc", "ethbtc", "maticusdc"]
