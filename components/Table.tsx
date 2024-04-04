@@ -1,192 +1,145 @@
 
 "use client"
 
-import { cryptoKeys, cryptoPairs, cryptoIconList, tableTitle } from "@/fakeData"
-import { getNumberFromObjectKey } from "@/helpers"
+import { cryptoKeys, cryptoPairs, cryptoIconList, tableTitle, initialPrices, initialChanges, initialVolumes, initialVolumesUSD } from "@/fakeData"
+import { getKey } from "@/helpers"
+import { ChangeState } from "@/types"
 import { useEffect, useState } from "react"
 
 const Table = () => {
-    const [renderable, setRenderable] = useState(false)
-    const [prices, setPrices] = useState({
-        btcusdc: 0,
-        ethusdc: 0,
-        btcusdt: 0,
-        usdcusdt: 0,
-        ethusdt: 0,
-        solusdc: 0,
-        ethbtc: 0,
-        maticusdc: 0
-    })
+    const [updatedRows, setUpdatedRows] = useState<number[]>([])
 
-    const [pricesChange, setPricesChange] = useState({
-        btcusdc: 0,
-        ethusdc: 0,
-        btcusdt: 0,
-        usdcusdt: 0,
-        ethusdt: 0,
-        solusdc: 0,
-        ethbtc: 0,
-        maticusdc: 0
-    })
+    const [prices, setPrices] = useState(initialPrices)
 
-    const [volumes, setVolumes] = useState({
-        btcusdc: 0,
-        ethusdc: 0,
-        btcusdt: 0,
-        usdcusdt: 0,
-        ethusdt: 0,
-        solusdc: 0,
-        ethbtc: 0,
-        maticusdc: 0
-    })
+    const [updatedPrices, setUpdatedPrices] = useState<ChangeState[]>([])
+    const [pricesChange, setPricesChange] = useState(initialChanges)
 
-    const [volumesUSD, setVolumesUSD] = useState({
-        btcusdc: 0,
-        ethusdc: 0,
-        btcusdt: 0,
-        usdcusdt: 0,
-        ethusdt: 0,
-        solusdc: 0,
-        ethbtc: 0,
-        maticusdc: 0
-    })
+    const [volumes, setVolumes] = useState(initialVolumes)
+
+    const [volumesUSD, setVolumesUSD] = useState(initialVolumesUSD)
+
+    // const [previous]
 
     useEffect(() => {
         // Track the price of the crypto pairs
-        cryptoKeys.map((pair) => {
-            let ws = new WebSocket(`wss://stream.binance.com:443/ws/${pair.toLowerCase()}@trade`)
+        cryptoKeys.map((pair, index) => {
+            let ws = new WebSocket(`wss://stream.binance.com:443/ws/${pair}@trade`)
             ws.onmessage = (event) => {
-                if (getNumberFromObjectKey(prices, pair) !== JSON.parse(event.data).p as number) {
-                    setPrices((prev) => ({ ...prev, [pair.toLowerCase()]: JSON.parse(event.data).p }))
+                console.log(JSON.parse(event.data).p);
+                if (getKey(prices, pair) !== JSON.parse(event.data).p) {
+                    setPrices((prev) => ({ ...prev, [pair]: JSON.parse(event.data).p }))
+                    setUpdatedRows(prev => [...prev, index])
+                    if (getKey(prices, pair) > JSON.parse(event.data).p) {
+                        setUpdatedPrices((prev) => [...prev, { index, state: -1 }])
+                    } else {
+                        setUpdatedPrices((prev) => [...prev, { index, state: 1 }])
+                    }
+                    setTimeout(() => {
+                        setUpdatedRows(prev => prev.filter((rowIndex) => rowIndex !== index))
+                        setUpdatedPrices(prev => prev.filter((item) => item.index !== index))
+                    }, 1000)
                 }
             }
         })
         // Track the price change 24h of the crypto pairs
-        cryptoKeys.map((pair) => {
-            let ws = new WebSocket(`wss://stream.binance.com:443/ws/${pair.toLowerCase()}@ticker`)
+        cryptoKeys.map((pair, index) => {
+            let ws = new WebSocket(`wss://stream.binance.com:443/ws/${pair}@ticker`)
             ws.onmessage = (event) => {
-                if (getNumberFromObjectKey(pricesChange, pair) !== JSON.parse(event.data).P as number) {
-                    setPricesChange((prev) => ({ ...prev, [pair.toLowerCase()]: JSON.parse(event.data).P }))
+                if (getKey(pricesChange, pair) !== JSON.parse(event.data).P as number) {
+                    setPricesChange((prev) => ({ ...prev, [pair]: JSON.parse(event.data).P }))
+                    setUpdatedRows(prev => [...prev, index])
                 }
-                // console.log(event.data)
             }
         })
         // Track the volume 24h of the crypto pairs
-        cryptoKeys.map((pair) => {
-            let ws = new WebSocket(`wss://stream.binance.com:443/ws/${pair.toLowerCase()}@ticker`)
+        cryptoKeys.map((pair, index) => {
+            let ws = new WebSocket(`wss://stream.binance.com:443/ws/${pair}@ticker`)
             ws.onmessage = (event) => {
-                if (getNumberFromObjectKey(volumes, pair) !== JSON.parse(event.data).v as number) {
-                    setVolumes((prev) => ({ ...prev, [pair.toLowerCase()]: JSON.parse(event.data).v }))
+                if (getKey(volumes, pair) !== JSON.parse(event.data).v as number) {
+                    setVolumes((prev) => ({ ...prev, [pair]: JSON.parse(event.data).v }))
+                    setUpdatedRows(prev => [...prev, index])
                 }
             }
         })
 
         // Track the volume 24h in USD of the crypto pairs
-        cryptoKeys.map((pair) => {
-            let ws = new WebSocket(`wss://stream.binance.com:443/ws/${pair.toLowerCase()}@ticker`)
+        cryptoKeys.map((pair, index) => {
+            let ws = new WebSocket(`wss://stream.binance.com:443/ws/${pair}@ticker`)
             ws.onmessage = (event) => {
-                if (getNumberFromObjectKey(volumesUSD, pair) !== JSON.parse(event.data).c * JSON.parse(event.data).v as number) {
-                    setVolumesUSD((prev) => ({ ...prev, [pair.toLowerCase()]: JSON.parse(event.data).c * JSON.parse(event.data).v }))
+                const data = JSON.parse(event.data);
+                const [c, v] = [Number(data.c), Number(data.v)];
+                if (getKey(volumesUSD, pair) !== (c * v)) {
+                    setVolumesUSD((prev) => ({ ...prev, [pair]: Number(c * v).toFixed(3) }))
+                    setUpdatedRows(prev => [...prev, index])
                 }
             }
         })
     }, [])
 
-    // Initialize data and show chart after 10 seconds
-    setTimeout(() => {
-        setRenderable(true)
-    }, 0)
-    if (!renderable) {
-        return (
-            <h1 className="text-4xl text-center text-green-400">
-                Please wait 10 seconds to load the initial data ^^
-                (Because some pairs have slow response time)
-            </h1>
-        )
-    } else {
-        return (
-            <div className="w-full bg-zinc-100 flex flex-col px-3">
-                <div className="grid grid-cols-5 bg-zinc-200 px-4">
-                    {tableTitle.map((title, index) => (
-                        <div key={index} className={`flex items-center gap-2 ${index != 0 ? "justify-end" : ""}`}>
-                            {index === 4 && <img src="/assets/icons/arrow-down.svg" alt="arrow-down" className="w-6 h-6" />}
-                            <p className="text-center text-lg py-2 font-medium">{title}</p>
-                        </div>
-                    ))}
-                </div>
-                <div className="grid grid-cols-5">
-                    {tableTitle.map((_, index) => (
-                        <div key={index} className="flex flex-col">
-                            {index == 0 ? (
-                                <div className="pl-4">
-                                    {
-                                        cryptoPairs.map((pair, id) => (
-                                            <div key={id} className="flex items-center gap-3">
-                                                <div className="w-6 h-6 rounded-full">
-                                                    <img src={`assets/icons/${cryptoIconList[id][0]}-bg.svg`} alt="BTC icon" className="w-full h-full" />
-                                                </div>
-                                                <p key={id} className='text-center text-lg py-2 font-bold'>
-                                                    {pair}
-                                                </p>
-                                            </div>
-                                        ))
-                                    }
-                                </div>
-                            ) : index == 1 ? (
-                                <>
-                                    {
-                                        cryptoKeys.map((pair, i) => (
-                                            <div key={i} className="flex items-center justify-end">
-                                                <div className="flex items-center gap-3">
-                                                    <img src={`assets/icons/${cryptoIconList[i][1]}.svg`} alt="BTC icon" className="w-6 h-6" />
-                                                    <p key={i} className='text-center text-lg py-2 font-medium'>
-                                                        {new Intl.NumberFormat("en-IN", { maximumFractionDigits: 4 }).format(getNumberFromObjectKey(prices, pair))}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        ))
-                                    }
-                                </>
-                            ) : index == 2 ? (
-                                <div className="pr-2">
-                                    {
-                                        cryptoKeys.map((pair, i) => (
-                                            <p key={i} className={`text-end text-lg py-2 font-medium ${getNumberFromObjectKey(pricesChange, pair) > 0 ? "text-green-500" : (getNumberFromObjectKey(pricesChange, pair) < 0 ? "text-red-500" : "text-black")}`}>
-                                                {`${getNumberFromObjectKey(pricesChange, pair) > 0 ? "+" : ""}${new Intl.NumberFormat("en-IN", { maximumFractionDigits: 2 }).format(getNumberFromObjectKey(pricesChange, pair))}%`}
-                                            </p>
-                                        ))
-                                    }
-                                </div>
-                            ) : index == 3 ? (
-                                <div className="pr-4">
-                                    {
-                                        cryptoKeys.map((pair, i) => (
-                                            <div key={i} className="flex items-center justify-end gap-3">
-                                                <img src={`assets/icons/${cryptoIconList[i][0]}.svg`} alt="BTC icon" className="w-6 h-6" />
-                                                <p key={i} className='text-center text-lg py-2 font-normal'>
-                                                    {new Intl.NumberFormat("ja-JP", { maximumFractionDigits: 4 }).format(getNumberFromObjectKey(volumes, pair))}
-                                                </p>
-                                            </div>
-                                        ))
-                                    }
-                                </div>
-                            ) : (
-                                <div className="pr-4">
-                                    {
-                                        cryptoKeys.map((pair, i) => (
-                                            <p key={i} className='text-end text-lg py-2 font-normal'>
-                                                ${new Intl.NumberFormat("ja-JP", { maximumFractionDigits: 3 }).format(getNumberFromObjectKey(volumesUSD, pair))}
-                                            </p>
-                                        ))
-                                    }
-                                </div>
-                            )}
-                        </div>
-                    ))}
-                </div>
+    console.log(updatedRows);
+    return (
+        <div className="w-full bg-zinc-100 flex flex-col px-3 z-[10]">
+            <div className="grid grid-cols-5 bg-zinc-200 px-4">
+                {tableTitle.map((title, index) => (
+                    <div key={index} className={`flex items-center gap-2 ${index != 0 ? "justify-end" : ""}`}>
+                        {index === 4 && <img src="/assets/icons/arrow-down.svg" alt="arrow-down" className="w-6 h-6" />}
+                        <p className="text-center text-lg py-2 font-medium">{title}</p>
+                    </div>
+                ))}
             </div>
-        )
-    }
+            <div className="flex flex-col">
+                {cryptoKeys.map((pair, id) => (
+                    <div key={id} className="relative w-full h-[44px]">
+                        <div className={`absolute top-0 left-0 w-full h-full content-none ${updatedRows.includes(id) ? "bg-pseudo" : ""}`}>
+                        </div>
+                        <div className={`grid grid-cols-5 bg-transparent z-[20]`}>
+                            {tableTitle.map((_, i) => (
+                                i == 0 ? (
+                                    <div key={i} className="flex items-center gap-3">
+                                        <div className="w-6 h-6 rounded-full">
+                                            <img src={`assets/icons/${cryptoIconList[id][0]}-bg.svg`} alt="BTC icon" className="w-full h-full" />
+                                        </div>
+                                        <p className='text-center text-lg py-2 font-bold'>
+                                            {cryptoPairs[id]}
+                                        </p>
+                                    </div>
+                                ) : i == 1 ? (
+                                    <div className="flex">
+                                        <div className="flex flex-1 items-center justify-between pl-[56px] gap-3">
+                                            <img src={`assets/icons/${cryptoIconList[id][1]}.svg`} alt="BTC icon" className="w-6 h-6" />
+                                            <p key={i} className={`text-center text-lg py-2 font-medium ${updatedPrices.map(item => {item.index === id ? "animated-text" : ""})}`}>
+                                                {new Intl.NumberFormat("en-IN", { maximumFractionDigits: 4 }).format(getKey(prices, pair))}
+                                            </p>
+                                        </div>
+                                    </div>
+                                ) : i == 2 ? (
+                                    <p key={i} className={`text-end text-lg py-2 pr-2 font-medium ${getKey(pricesChange, pair) > 0 ? "text-green-500" : (getKey(pricesChange, pair) < 0 ? "text-red-500" : "text-black")}`}>
+                                        {`${getKey(pricesChange, pair) > 0 ? "+" : ""}${new Intl.NumberFormat("en-IN", { maximumFractionDigits: 2 }).format(getKey(pricesChange, pair))}%`}
+                                    </p>
+                                ) : i == 3 ? (
+                                    <div key={i} className="flex items-center justify-end gap-3">
+                                        <img src={`assets/icons/${cryptoIconList[id][0]}.svg`} alt="BTC icon" className="w-6 h-6" />
+                                        <p key={i} className='text-center text-lg py-2 pr-4 font-normal'>
+                                            {getKey(volumes, pair) > 10000 ?
+                                                new Intl.NumberFormat("ja-JP", { maximumFractionDigits: 0 }).format(getKey(volumes, pair)) :
+                                                new Intl.NumberFormat("ja-JP", { maximumFractionDigits: 4 }).format(getKey(volumes, pair))}
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <p key={i} className='text-end text-lg py-2 font-normal pr-4'>
+                                        ${getKey(volumesUSD, pair) > 10000 ?
+                                            new Intl.NumberFormat("ja-JP", { maximumFractionDigits: 0 }).format(getKey(volumesUSD, pair)) :
+                                            new Intl.NumberFormat("ja-JP", { maximumFractionDigits: 3 }).format(getKey(volumesUSD, pair))}
+                                    </p>
+                                )
+                            ))}
+                        </div>
+                    </div>
+
+                ))}
+            </div>
+        </div>
+    )
 
 }
 

@@ -1,3 +1,54 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@keyframes dropdown {
+    0% {
+    opacity: 0;
+    }
+
+    50% {
+    opacity: 1;
+    }
+
+    100% {
+    opacity: 0;
+    }
+}
+
+@keyframes changeColor {
+    0% {
+        color: green;
+    }
+    100% {
+        color: black;
+    }
+}
+
+.bg-pseudo {
+    width: 100%;
+    height: 100%;
+}
+
+.bg-pseudo::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    --tw-bg-opacity: 1;
+    background-color: rgb(203 213 225 / var(--tw-bg-opacity));
+    animation: dropdown 1s ease-out;
+    z-index: -1;
+}
+
+.animate-bg {
+    --tw-bg-opacity: 1;
+    background-color: rgb(203 213 225 / var(--tw-bg-opacity));
+    animation: dropdown 1s ease-out;
+}
+
+.animated-text {
+    animation: changeColor 2s ease-out;
+}
