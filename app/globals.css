@@ -16,13 +16,22 @@
     }
 }
 
-@keyframes changeColor {
+@keyframes changeColorUp {
     0% {
-        color: green;
+        color: rgb(34, 197, 74);
     }
     100% {
         color: black;
     }
+}
+
+@keyframes changeColorDown {
+  0% {
+      color: rgb(239, 68, 68);
+  }
+  100% {
+      color: black;
+  }
 }
 
 .bg-pseudo {
@@ -38,17 +47,15 @@
     width: 100%;
     height: 100%;
     --tw-bg-opacity: 1;
-    background-color: rgb(203 213 225 / var(--tw-bg-opacity));
+    background-color: rgb(224 224 224 / var(--tw-bg-opacity));
     animation: dropdown 1s ease-out;
     z-index: -1;
 }
 
-.animate-bg {
-    --tw-bg-opacity: 1;
-    background-color: rgb(203 213 225 / var(--tw-bg-opacity));
-    animation: dropdown 1s ease-out;
+.animated-text-up {
+    animation: changeColorUp 5s ease-out;
 }
 
-.animated-text {
-    animation: changeColor 2s ease-out;
+.animated-text-down {
+    animation: changeColorDown 5s ease-out;
 }

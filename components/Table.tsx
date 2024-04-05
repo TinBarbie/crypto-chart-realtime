@@ -7,7 +7,7 @@ import { ChangeState } from "@/types"
 import { useEffect, useState } from "react"
 
 const Table = () => {
-    const [updatedRows, setUpdatedRows] = useState<number[]>([])
+    const [updatedRows, setUpdatedRows] = useState(new Set())
 
     const [prices, setPrices] = useState(initialPrices)
 
@@ -23,19 +23,26 @@ const Table = () => {
     useEffect(() => {
         // Track the price of the crypto pairs
         cryptoKeys.map((pair, index) => {
-            let ws = new WebSocket(`wss://stream.binance.com:443/ws/${pair}@trade`)
+            let ws = new WebSocket(`wss://stream.binance.com:443/ws/${pair}@aggTrade`)
             ws.onmessage = (event) => {
                 console.log(JSON.parse(event.data).p);
                 if (getKey(prices, pair) !== JSON.parse(event.data).p) {
                     setPrices((prev) => ({ ...prev, [pair]: JSON.parse(event.data).p }))
-                    setUpdatedRows(prev => [...prev, index])
-                    if (getKey(prices, pair) > JSON.parse(event.data).p) {
-                        setUpdatedPrices((prev) => [...prev, { index, state: -1 }])
-                    } else {
-                        setUpdatedPrices((prev) => [...prev, { index, state: 1 }])
+                    if (!updatedRows.has(index)) {
+                        setUpdatedRows(prev => prev.add(index))
+                    }
+                    if (!updatedPrices.some(item => item.index === index)) {
+                        if (getKey(prices, pair) > JSON.parse(event.data).p) {
+                            setUpdatedPrices((prev) => [...prev, { index, state: -1 }])
+                        } else {
+                            setUpdatedPrices((prev) => [...prev, { index, state: 1 }])
+                        }
                     }
                     setTimeout(() => {
-                        setUpdatedRows(prev => prev.filter((rowIndex) => rowIndex !== index))
+                        setUpdatedRows(prev => {
+                            prev.delete(index)
+                            return prev
+                        })
                         setUpdatedPrices(prev => prev.filter((item) => item.index !== index))
                     }, 1000)
                 }
@@ -47,7 +54,10 @@ const Table = () => {
             ws.onmessage = (event) => {
                 if (getKey(pricesChange, pair) !== JSON.parse(event.data).P as number) {
                     setPricesChange((prev) => ({ ...prev, [pair]: JSON.parse(event.data).P }))
-                    setUpdatedRows(prev => [...prev, index])
+                    setUpdatedRows(prev => {
+                        prev.delete(index)
+                        return prev
+                    })
                 }
             }
         })
@@ -57,7 +67,10 @@ const Table = () => {
             ws.onmessage = (event) => {
                 if (getKey(volumes, pair) !== JSON.parse(event.data).v as number) {
                     setVolumes((prev) => ({ ...prev, [pair]: JSON.parse(event.data).v }))
-                    setUpdatedRows(prev => [...prev, index])
+                    setUpdatedRows(prev => {
+                        prev.delete(index)
+                        return prev
+                    })
                 }
             }
         })
@@ -70,7 +83,10 @@ const Table = () => {
                 const [c, v] = [Number(data.c), Number(data.v)];
                 if (getKey(volumesUSD, pair) !== (c * v)) {
                     setVolumesUSD((prev) => ({ ...prev, [pair]: Number(c * v).toFixed(3) }))
-                    setUpdatedRows(prev => [...prev, index])
+                    setUpdatedRows(prev => {
+                        prev.delete(index)
+                        return prev
+                    })
                 }
             }
         })
@@ -90,7 +106,7 @@ const Table = () => {
             <div className="flex flex-col">
                 {cryptoKeys.map((pair, id) => (
                     <div key={id} className="relative w-full h-[44px]">
-                        <div className={`absolute top-0 left-0 w-full h-full content-none ${updatedRows.includes(id) ? "bg-pseudo" : ""}`}>
+                        <div className={`absolute top-0 left-0 w-full h-full content-none ${updatedRows.has(id) ? "bg-pseudo" : ""}`}>
                         </div>
                         <div className={`grid grid-cols-5 bg-transparent z-[20]`}>
                             {tableTitle.map((_, i) => (
@@ -107,7 +123,7 @@ const Table = () => {
                                     <div className="flex">
                                         <div className="flex flex-1 items-center justify-between pl-[56px] gap-3">
                                             <img src={`assets/icons/${cryptoIconList[id][1]}.svg`} alt="BTC icon" className="w-6 h-6" />
-                                            <p key={i} className={`text-center text-lg py-2 font-medium ${updatedPrices.map(item => {item.index === id ? "animated-text" : ""})}`}>
+                                            <p key={i} className={`text-center text-lg py-2 font-medium ${updatedPrices.some(item => item.index === id) && (updatedPrices[id]?.state === 1 ? "animated-text-up" : "animated-text-down")}`}>
                                                 {new Intl.NumberFormat("en-IN", { maximumFractionDigits: 4 }).format(getKey(prices, pair))}
                                             </p>
                                         </div>
