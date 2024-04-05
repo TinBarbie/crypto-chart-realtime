@@ -97,7 +97,7 @@ const Table = () => {
         <div className="w-full bg-zinc-100 flex flex-col px-3 z-[10]">
             <div className="grid grid-cols-5 bg-zinc-200 px-4">
                 {tableTitle.map((title, index) => (
-                    <div key={index} className={`flex items-center gap-2 ${index != 0 ? "justify-end" : ""}`}>
+                    <div key={index} className={`flex items-center gap-2 ${index != 0 ? "justify-center" : ""}`}>
                         {index === 4 && <img src="/assets/icons/arrow-down.svg" alt="arrow-down" className="w-6 h-6" />}
                         <p className="text-center text-lg py-2 font-medium">{title}</p>
                     </div>
@@ -120,26 +120,28 @@ const Table = () => {
                                         </p>
                                     </div>
                                 ) : i == 1 ? (
-                                    <div className="flex">
-                                        <div className="flex flex-1 items-center justify-between pl-[56px] gap-3">
+                                    <div key={i} className="flex">
+                                        <div className="flex flex-1 items-center justify-between pr-[64px] gap-3">
                                             <img src={`assets/icons/${cryptoIconList[id][1]}.svg`} alt="BTC icon" className="w-6 h-6" />
-                                            <p key={i} className={`text-center text-lg py-2 font-medium ${updatedPrices.some(item => item.index === id) && (updatedPrices[id]?.state === 1 ? "animated-text-up" : "animated-text-down")}`}>
+                                            <p  className={`text-center text-lg py-2 font-medium ${updatedPrices.some(item => item.index === id) && (updatedPrices[id]?.state === 1 ? "animated-text-up" : "animated-text-down")}`}>
                                                 {new Intl.NumberFormat("en-IN", { maximumFractionDigits: 4 }).format(getKey(prices, pair))}
                                             </p>
                                         </div>
                                     </div>
                                 ) : i == 2 ? (
-                                    <p key={i} className={`text-end text-lg py-2 pr-2 font-medium ${getKey(pricesChange, pair) > 0 ? "text-green-500" : (getKey(pricesChange, pair) < 0 ? "text-red-500" : "text-black")}`}>
+                                    <p key={i} className={`text-center text-lg py-2 pl-8 font-medium ${getKey(pricesChange, pair) > 0 ? "text-green-500" : (getKey(pricesChange, pair) < 0 ? "text-red-500" : "text-black")}`}>
                                         {`${getKey(pricesChange, pair) > 0 ? "+" : ""}${new Intl.NumberFormat("en-IN", { maximumFractionDigits: 2 }).format(getKey(pricesChange, pair))}%`}
                                     </p>
                                 ) : i == 3 ? (
-                                    <div key={i} className="flex items-center justify-end gap-3">
-                                        <img src={`assets/icons/${cryptoIconList[id][0]}.svg`} alt="BTC icon" className="w-6 h-6" />
-                                        <p key={i} className='text-center text-lg py-2 pr-4 font-normal'>
-                                            {getKey(volumes, pair) > 10000 ?
-                                                new Intl.NumberFormat("ja-JP", { maximumFractionDigits: 0 }).format(getKey(volumes, pair)) :
-                                                new Intl.NumberFormat("ja-JP", { maximumFractionDigits: 4 }).format(getKey(volumes, pair))}
-                                        </p>
+                                    <div key={i} className="flex">
+                                        <div className="flex flex-1 items-center justify-between px-4 gap-3">
+                                            <img src={`assets/icons/${cryptoIconList[id][0]}.svg`} alt="BTC icon" className="w-6 h-6" />
+                                            <p className='text-center text-lg py-2 pr-4 font-normal'>
+                                                {getKey(volumes, pair) > 10000 ?
+                                                    new Intl.NumberFormat("ja-JP", { maximumFractionDigits: 0 }).format(getKey(volumes, pair)) :
+                                                    new Intl.NumberFormat("ja-JP", { maximumFractionDigits: 4 }).format(getKey(volumes, pair))}
+                                            </p>
+                                        </div>
                                     </div>
                                 ) : (
                                     <p key={i} className='text-end text-lg py-2 font-normal pr-4'>
